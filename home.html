@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Website Responsiveness</title>
+	<link rel="shortcut icon" type="image/png" href="/static/favicon.png"/>
+	<link rel="stylesheet" href="/static/bootstrap.min.css">
+	<script type="text/javascript" src="/static/jquery.js" ></script>
+	<script src="/socket.io/socket.io.js"></script>
+	<style>
+		#dynamic{
+			padding-top: 100px;
+		}
+		.image, .text{
+			height: 400px;
+			overflow:auto;
+		}
+		.mid{
+			line-height:380px;
+		}
+		#but{
+			height:80px;
+		}
+		#but .btn-group .btn{
+  			border-radius:20px; 
+ 		}
+ 		#url{
+ 			width:300px;
+ 		}
+ 		.warning{
+ 			background-color: yellow;
+ 		}
+ 		.danger{
+ 			background-color: red;
+ 		}
+ 		.success{
+ 			background-color: green;
+ 		}
+	</style>
+	<script>
+		var socket = io.connect();
+		$(document).ready(function(){
+			$('.form-inline').submit(function(){
+				$('#dynamic').empty();
+				var url = $('.form-control').val();
+				if(url.length<10) return false;
+				socket.emit('message', url);
+				return false;
+			});
+
+			socket.on('load', function(width, device){
+				$('#dynamic').append(
+    				'<div class="col-md-4">'+
+        				'<div class="panel panel-default">'+
+        					'<div class="panel-body warning" id="'+device+'">'+
+	                			'<h4 class="text-center">'+device+'_'+width+'x'+320+'</h4>'+
+	            			'</div>'+
+            				'<div class="panel-image hide-panel-body image" id="image'+device+'_'+width+'x'+320+'">'+
+            					'<p class="text-center mid">Loading, Please wait...</p>'+
+            				'</div>'+
+            			'</div>'+
+            		'</div>'
+        		);
+			});
+
+			socket.on('image', function(path, err){
+				if(err){
+					var c = '<p class="text-center">'+path+'</p>';
+				}else{
+					var c = '<img src="/static/images/'+path+'.jpeg" class="img-responsive"/>';
+				}	
+				var device = path.split('-');
+				$('#image'+device[0]).empty().prepend(c);
+			});
+
+			socket.on('responsiveness', function(device, status){
+				$('#'+device).removeClass('warning').addClass(status);
+			});
+		});
+	</script>
+</head>
+<body>
+	<nav class="navbar navbar-default navbar-fixed-top">
+  		<div class="container-fluid">
+    		<div class="col-md-12">
+      			<form class="navbar-form text-center form-inline" role="form" autocomplete="off">
+        			<div class="form-group">
+          				<input type="text" id="url" class="form-control" placeholder="Enter website url...">
+        			</div>
+        			<button type="submit" class="btn btn-primary">TEST URL</button>
+      			</form>
+    		</div>
+  		</div>
+	</nav>
+	<div class="container">
+		<div class="row form-group" id="dynamic">
+		</div>
+	</div>
+</body>
+</html>
